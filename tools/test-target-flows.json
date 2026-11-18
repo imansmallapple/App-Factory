@@ -1,0 +1,55 @@
+{
+  "_note": "Flows for the purpose-built UI test target (eval/ui-test-target). It exposes text labels on every control, one deliberately broken button, a persisted toggle and a sortable list. Expected result: 5 pass, 1 fail (broken_button).",
+  "flows": [
+    {
+      "id": "home_ok",
+      "screens": ["Index.ets"],
+      "steps": [
+        {"launch": true},
+        {"expect_visible": ["A2H Test Target", "打开设置", "打开列表", "坏按钮"]}
+      ]
+    },
+    {
+      "id": "open_settings",
+      "screens": ["Settings.ets"],
+      "steps": [
+        {"launch": true},
+        {"tap": "打开设置"},
+        {"expect_page_changed": true},
+        {"expect_visible": ["设置页", "深色模式"]},
+        {"back": true},
+        {"expect_visible": ["A2H Test Target"]}
+      ]
+    },
+    {
+      "id": "open_list",
+      "screens": ["List.ets"],
+      "steps": [
+        {"launch": true},
+        {"tap": "打开列表"},
+        {"expect_page_changed": true},
+        {"expect_visible": ["列表页", "Item 1", "Item 5", "顺序: 升序"]}
+      ]
+    },
+    {
+      "id": "sort_toggle",
+      "screens": ["List.ets"],
+      "steps": [
+        {"launch": true},
+        {"tap": "打开列表"},
+        {"expect_page_changed": true},
+        {"tap": "排序"},
+        {"expect_visible": ["顺序: 降序"]}
+      ]
+    },
+    {
+      "id": "broken_button_must_fail",
+      "screens": ["Index.ets"],
+      "steps": [
+        {"launch": true},
+        {"tap": "坏按钮"},
+        {"expect_page_changed": true}
+      ]
+    }
+  ]
+}

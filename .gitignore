@@ -1,0 +1,44 @@
+# Workspace repo: track the scripts and measurement assets that ECAT's own repo does not hold.
+# Everything here is either source or a hand-authored spec; build outputs, exports and run
+# artifacts are ignored on purpose (they are regenerated, and they are large).
+
+# nested repositories
+eval/ecat/
+eval/migration-rules/
+
+# build / dependency / export output
+export/
+build/
+reports/
+**/build/
+**/oh_modules/
+**/node_modules/
+**/.hvigor/
+**/.preview/
+**/dist/
+**/__pycache__/
+*.pyc
+*.hap
+*.hsp
+*.app
+*.apk
+*.so
+*.dll
+
+# agent / tool state
+.ecat/
+.hermes/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# screenshots are evidence, not source: keep the json, drop the pixels
+eval/**/shots/*.png
+eval/**/shots/*.jpeg
+eval/**/shots/*.jpg
+
+# nested repos: each port keeps its own history
+eval/sunflower-harmony/
+eval/gallery-2iter-snapshot/
+eval/gallery-harmony/

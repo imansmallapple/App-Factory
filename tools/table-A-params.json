@@ -1,0 +1,33 @@
+{
+  "_note": "Table A 的参数化入口表：simple activity name -> am start 额外参数。extras 走 --es，int_extras 走 --ei，bool_extras 走 --ez。pre_state 只是给表加注，说明这一页依赖什么前置状态（例如进程内静态列表），不代表脚本能造出该状态。",
+  "_source": "constants from eval/simple-gallery/app/src/main/kotlin/com/simplemobiletools/gallery/pro/helpers/Constants.kt (DIRECTORY='directory':140, PATH='path':142)",
+  "MediaActivity": {
+    "extras": { "directory": "/sdcard/Pictures/A2HTest" },
+    "pre_state": "目录必须存在且有媒体文件"
+  },
+  "ViewPagerActivity": {
+    "extras": { "path": "/sdcard/Pictures/A2HTest/a2h.png" },
+    "pre_state": "需要一个可打开的媒体文件路径"
+  },
+  "PhotoActivity": {
+    "extras": { "path": "/sdcard/Pictures/A2HTest/a2h.png" },
+    "pre_state": "通常由 MediaActivity 传入进程内 MediaModel 列表；直跳可能拿不到列表"
+  },
+  "VideoActivity": {
+    "extras": { "path": "/sdcard/Pictures/A2HTest/a2h.png" },
+    "pre_state": "需要真实视频文件；直跳通常拿不到进程内列表"
+  },
+  "EditActivity": {
+    "pre_state": "需要 MediaStore.EXTRA_OUTPUT 指向的 Uri（content://）"
+  },
+  "SetWallpaperActivity": {
+    "pre_state": "需要 uri/file_path 参数；无参数会直接 finish"
+  },
+  "WidgetConfigureActivity": {
+    "int_extras": { "appWidgetId": 1 },
+    "pre_state": "需要 dict.appwidget 里存在的合法 appWidgetId"
+  },
+  "CropImageActivity": {
+    "pre_state": "com.canhub.cropper 需要 source uri + 一组 crop 配置 extras"
+  }
+}
