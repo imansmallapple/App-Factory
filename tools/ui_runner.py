@@ -118,6 +118,8 @@ class ScreenState:
     labels: list[str] = field(default_factory=list)
     nodes: list[Node] = field(default_factory=list)
     raw: dict | None = None
+    width: int = 0
+    height: int = 0
 
     def has(self, needle: str) -> bool:
         n = needle.strip().lower()
@@ -228,6 +230,33 @@ def parse_uitest_dump(text: str) -> ScreenState:
     except json.JSONDecodeError:
         return st
     st.raw = data if isinstance(data, dict) else {"root": data}
+
+    # screen size from the outermost bounds: needed to bucket element positions
+    def _root_size(node):
+        if isinstance(node, list):
+            for v in node:
+                size = _root_size(v)
+                if size:
+                    return size
+            return None
+        if not isinstance(node, dict):
+            return None
+        attrs = node.get("attributes") if isinstance(node.get("attributes"), dict) else node
+        bounds = _BOUNDS.findall(str(attrs.get("bounds") or ""))
+        if bounds:
+            (_, _, x2, y2) = bounds[0]
+            width, height = int(x2), int(y2)
+            if width > 200 and height > 200:
+                return width, height
+        for key in ("children", "childNodes", "nodes"):
+            size = _root_size(node.get(key))
+            if size:
+                return size
+        return None
+
+    size = _root_size(data)
+    if size:
+        st.width, st.height = size
 
     def walk(node):
         if isinstance(node, list):
@@ -717,6 +746,12 @@ def run_flow(d: Driver, flow: dict, shots: Path, dumpdir: Path) -> dict:
                         counts[key] = counts.get(key, 0) + 1
                 if counts:
                     entry["types"] = dict(sorted(counts.items(), key=lambda kv: -kv[1])[:12])
+                # geometry, so two screens can be compared by *where* things are, not only how many
+                if st_now.width and st_now.height and st_now.nodes:
+                    entry["screen_size"] = [st_now.width, st_now.height]
+                    entry["elements"] = [
+                        [getattr(n, "type", "") or "", n.x, n.y] for n in st_now.nodes[:80]
+                    ]
                 # long enough to keep whole labels: the 32-char cap turned assertions into
                 # fragments like "cloc" and made suggestions unusable
                 entry["sig"] = st_now.sig()[:200]
