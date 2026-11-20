@@ -109,6 +109,8 @@ class Node:
     label: str
     x: int
     y: int
+    #: component type ("Button", "Text", …) — the part that is comparable across platforms
+    type: str = ""
 
 
 @dataclass
@@ -140,6 +142,18 @@ _SYS_PREFIX = ("StatusBar", "NavBar", "SCBDesktop", "SwiperPage", "FormItem",
                "PluginRoot", "TimeView", "GridSwiper", "session", "__")
 _CJK = re.compile(r"[\u4e00-\u9fff]")
 _JUNK = re.compile(r"^[\s\d,:.%/-]*$")
+
+
+#: HarmonyOS chrome that shows up in every dump and says nothing about the page
+SYSTEM_NODE_MARKERS = (
+    "livemetaball", "livecapsule", "statusbarbridge", "windowscene",
+    "__common__", "clockstatusview", "metaballnode", "navigationindicator",
+)
+
+
+def is_system_noise(text: str, node_type: str = "") -> bool:
+    hay = f"{text} {node_type}".lower()
+    return any(marker in hay for marker in SYSTEM_NODE_MARKERS)
 
 
 def is_ui_label(text: str) -> bool:
@@ -231,8 +245,9 @@ def parse_uitest_dump(text: str) -> ScreenState:
                     label = v.strip()
                     break
             xy = _center(str(attrs.get("bounds") or ""))
-            if label and xy and is_ui_label(label):
-                st.nodes.append(Node(label, xy[0], xy[1]))
+            node_type = str(attrs.get("type") or "")
+            if label and xy and is_ui_label(label) and not is_system_noise(label, node_type):
+                st.nodes.append(Node(label, xy[0], xy[1], node_type))
                 st.labels.append(label)
         for k in ("children", "childNodes", "nodes"):
             walk(node.get(k))
@@ -584,6 +599,7 @@ def run_flow(d: Driver, flow: dict, shots: Path, dumpdir: Path) -> dict:
     # `"screen": "<name>"` to mark "after this action we are on that screen" — that is what
     # turns the flow into action-level edges instead of a bare screen list.
     trace: list[dict] = []
+    prev_marker_labels: set[str] = set()
 
     def fail(idx: int, name: str, expected: list, actual: list, msg: str, *_: object) -> dict:
         out = _fail(fid, idx, name, expected, actual, msg, d, shots, dumpdir)
@@ -657,6 +673,11 @@ def run_flow(d: Driver, flow: dict, shots: Path, dumpdir: Path) -> dict:
                     time.sleep(0.6)
                 if missing:
                     return fail(idx, name, want, st.labels, f"missing {missing}", d, shots, dumpdir)
+                # An assertion that was already true on the previous screen proves nothing about
+                # navigation: the label may come from the screen we never left. Mark it so the
+                # importer will not treat "label present" as "this screen was reached".
+                if prev_marker_labels and all(w.lower() in prev_marker_labels for w in want):
+                    entry["weak"] = True
 
             elif "expect_absent" in step:
                 want = [str(x) for x in step["expect_absent"]]
@@ -687,7 +708,19 @@ def run_flow(d: Driver, flow: dict, shots: Path, dumpdir: Path) -> dict:
             if step.get("screen"):
                 # captured *after* the action ran: this is the screen the step lands on
                 entry["screen"] = str(step["screen"])
-                entry["sig"] = d.state().sig()[:32]
+                st_now = d.state()
+                # element types, not text: this is what can be compared across platforms
+                counts: dict[str, int] = {}
+                for node in st_now.nodes:
+                    key = (getattr(node, "type", "") or "").strip()
+                    if key:
+                        counts[key] = counts.get(key, 0) + 1
+                if counts:
+                    entry["types"] = dict(sorted(counts.items(), key=lambda kv: -kv[1])[:12])
+                # long enough to keep whole labels: the 32-char cap turned assertions into
+                # fragments like "cloc" and made suggestions unusable
+                entry["sig"] = st_now.sig()[:200]
+                prev_marker_labels = {lab.lower() for lab in st_now.labels}
             if step.get("state"):
                 # a view *inside* that screen (tab / filter / panel) the step proves
                 entry["state"] = str(step["state"])
