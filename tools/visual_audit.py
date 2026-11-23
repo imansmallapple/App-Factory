@@ -131,11 +131,12 @@ def blocks(tree: list[dict]) -> list[dict]:
 
     out = []
     for n in tree:
-        if n["role"] != "container":
-            continue
+        if n["id"] in leaf_ids:
+            continue                       # a leaf is not a block
         inside = [c for c in descendants(n["id"]) if c in leaf_ids]
         if len(inside) >= 2:
-            out.append({"id": n["id"], "rect": n["rect"], "leaves": inside, "cls": n["cls"]})
+            out.append({"id": n["id"], "rect": n["rect"], "leaves": inside,
+                        "cls": n["cls"], "role": n["role"]})
     return out
 
 
@@ -368,7 +369,7 @@ def main() -> None:
             hb_by_leaf[lid] = hblock
     seen_blocks: set[frozenset] = set()
     for b in ab:
-        if len(b["leaves"]) >= 0.8 * len(au):
+        if len(b["leaves"]) >= 0.5 * len(au):
             continue                     # the page root is not a meaningful 1:N pair
         hit: collections.Counter = collections.Counter()
         for lid in b["leaves"]:

@@ -53,11 +53,31 @@ port puts plant names on a green band, Android puts them under the image), one u
 difference, the garden page is missing the "Add plant" affordance, and the plant list only carries
 6 of Android's 10+ plants.
 
+## Running every page
+
+`tools/audit_all.py` reads `tools/pages.json`, drives both devices page by page (a tap per page,
+because HarmonyOS has no `am start -n` equivalent), captures dump + two screenshots per side, runs
+the audit and writes `summary.json` / `summary.md`. Unreachable pages stay in the list as
+`unreachable` so the coverage number is honest.
+
+```
+$ python tools/audit_all.py
+garden      {page_offset 1, missing 1, extra 2, moved 2, class_style_drift 1,
+             block_child_mismatch 1, typography_check 1, unjudged 1, pass 3}
+plant_list  {page_offset 1, dataset_gap 1, missing 2, extra 3, role_changed 1,
+             class_style_drift 2, block_child_mismatch 1, typography_check 1,
+             moved_by_data 12, pass 3}
+2/2 pages audited
+```
+
+1:N now fires on both pages: an Android plant card carries 4 alignable children, the port's card
+carries 2 — one `block_child_mismatch` row instead of four unrelated diffs on the leaves.
+
 ## Honest gaps
 
-1. **1:N block detection does not fire on these two pages**: the only containers with ≥2 leaves are
-   page-level grids, which are filtered as roots. It needs a card-structured app to exercise.
-2. `reordered` has never fired on real data — only on synthetic inversions.
+1. `reordered` has never fired on real data — only on synthetic inversions.
+2. Page navigation is a hand-written tap coordinate per page (`tools/pages.json`); there is no
+   automatic route discovery on HarmonyOS yet.
 3. `move_tol` / `size_tol` are still fixed; only appearance eps is measured. Geometry noise is zero
    for a static screen, but a layout that legitimately reflows (different font metrics) is not
    modelled.

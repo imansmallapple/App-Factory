@@ -1,0 +1,21 @@
+{
+  "_comment": "Page list for audit_all.py. HarmonyOS has no 'am start -n' equivalent, so each page is reached by tapping a tab; coordinates are device pixels of the two screens.",
+  "android_serial": "emulator-5630",
+  "hmos_hdc": "C:/Program Files/Huawei/DevEco Studio/sdk/default/openharmony/toolchains/hdc.exe",
+  "hmos_target": "62T0225C25025145",
+  "hmos_bundle": "com.simplemobiletools.gallery.pro",
+  "hmos_entry": "EntryAbility",
+  "settle_s": 3,
+  "pages": [
+    {
+      "name": "garden",
+      "android": {"tap": [270, 363]},
+      "hmos": {"tap": [320, 538]}
+    },
+    {
+      "name": "plant_list",
+      "android": {"tap": [810, 363]},
+      "hmos": {"tap": [960, 538]}
+    }
+  ]
+}
