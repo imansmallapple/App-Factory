@@ -1,0 +1,568 @@
+meta:
+  version: 1
+  sources:
+    hmos: openharmony/docs master zh-cn/application-dev/reference/apis-arkui/arkui-ts
+      (51 basic + 45 containers)
+    android_widget: android-36 android.jar -> android/widget
+    android_material: com.google.android.material
+    android_compose: androidx.compose.material3 runtime jar (as in sunflower)
+  check_style_false: 'D1: platform owns the look; compare existence/position/state
+    only'
+  check_style_true: 'D2: appearance is app-authored; compare it'
+roles:
+  toggle:
+    check_style: false
+    state: checked
+    hmos_via: component
+    android_via: component
+  checkbox:
+    check_style: false
+    state: checked
+    hmos_via: component
+    android_via: component
+  checkbox_group:
+    check_style: false
+    state: checked
+    hmos_via: component
+    android_via: handrolled
+  radio:
+    check_style: false
+    state: checked
+    hmos_via: component
+    android_via: component
+  slider:
+    check_style: false
+    state: value
+    hmos_via: component
+    android_via: component
+  progress:
+    check_style: false
+    state: value
+    hmos_via: component
+    android_via: component
+  rating:
+    check_style: false
+    state: value
+    hmos_via: component
+    android_via: component
+  input:
+    check_style: false
+    state: text
+    hmos_via: component
+    android_via: component
+  search:
+    check_style: false
+    state: text
+    hmos_via: component
+    android_via: component
+  picker_date:
+    check_style: false
+    state: text
+    hmos_via: component
+    android_via: component
+  picker_time:
+    check_style: false
+    state: text
+    hmos_via: component
+    android_via: component
+  picker_text:
+    check_style: false
+    state: text
+    hmos_via: component
+    android_via: component
+  stepper:
+    check_style: false
+    state: text
+    hmos_via: component
+    android_via: handrolled
+  tabs:
+    check_style: false
+    state: selected
+    hmos_via: component
+    android_via: component
+  appbar:
+    check_style: false
+    state: ''
+    hmos_via: component
+    android_via: component
+  navbar:
+    check_style: false
+    state: selected
+    hmos_via: component
+    android_via: component
+  menu:
+    check_style: false
+    state: selected
+    hmos_via: component
+    android_via: component
+  filter:
+    check_style: false
+    state: ''
+    hmos_via: component
+    android_via: handrolled
+  dialog:
+    check_style: false
+    state: ''
+    hmos_via: component
+    android_via: component
+  toast:
+    check_style: false
+    state: ''
+    hmos_via: api
+    android_via: component
+  refresh:
+    check_style: false
+    state: ''
+    hmos_via: component
+    android_via: component
+  badge:
+    check_style: false
+    state: text
+    hmos_via: component
+    android_via: component
+  divider:
+    check_style: false
+    state: ''
+    hmos_via: component
+    android_via: component
+  scrollbar:
+    check_style: false
+    state: ''
+    hmos_via: component
+    android_via: attribute
+  swipe:
+    check_style: false
+    state: ''
+    hmos_via: attribute
+    android_via: component
+  button:
+    check_style: true
+    state: text
+    hmos_via: component
+    android_via: component
+  fab:
+    check_style: true
+    state: ''
+    hmos_via: handrolled
+    android_via: component
+  icon_button:
+    check_style: true
+    state: ''
+    hmos_via: component
+    android_via: component
+  chip:
+    check_style: true
+    state: text
+    hmos_via: component
+    android_via: component
+  chip_group:
+    check_style: true
+    state: selected
+    hmos_via: component
+    android_via: component
+  segmented:
+    check_style: false
+    state: selected
+    hmos_via: component
+    android_via: component
+  list_item:
+    check_style: true
+    state: ''
+    hmos_via: component
+    android_via: component
+  label:
+    check_style: true
+    state: text
+    hmos_via: component
+    android_via: component
+  image:
+    check_style: true
+    state: ''
+    hmos_via: component
+    android_via: component
+  video:
+    check_style: true
+    state: ''
+    hmos_via: component
+    android_via: component
+  web:
+    check_style: true
+    state: ''
+    hmos_via: component
+    android_via: component
+  card:
+    check_style: true
+    state: ''
+    hmos_via: handrolled
+    android_via: component
+  list:
+    check_style: true
+    state: ''
+    hmos_via: component
+    android_via: component
+  grid:
+    check_style: true
+    state: ''
+    hmos_via: component
+    android_via: component
+  pager:
+    check_style: true
+    state: selected
+    hmos_via: component
+    android_via: component
+  expandable:
+    check_style: true
+    state: ''
+    hmos_via: component
+    android_via: component
+  tooltip:
+    check_style: true
+    state: ''
+    hmos_via: attribute
+    android_via: component
+  clock:
+    check_style: true
+    state: text
+    hmos_via: component
+    android_via: component
+  switcher:
+    check_style: true
+    state: ''
+    hmos_via: handrolled
+    android_via: component
+  container:
+    check_style: false
+    state: ''
+    hmos_via: component
+    android_via: component
+android:
+  AbsListView: list
+  AbsSeekBar: slider
+  AbsSpinner: picker_text
+  AbsoluteLayout: container
+  ActionMenuView: appbar
+  AdapterViewAnimator: pager
+  AdapterViewFlipper: pager
+  AlertDialog: dialog
+  AlphabetIndexer: container
+  AnalogClock: clock
+  AppBar: appbar
+  AppBarLayout: appbar
+  AssistChip: chip
+  AutoCompleteTextView: input
+  Badge: badge
+  BadgeDrawable: badge
+  BottomNavigationView: navbar
+  BottomSheetDialog: dialog
+  BottomSheetDialogFragment: dialog
+  BottomSheetScaffold: dialog
+  Button: button
+  CalendarView: picker_date
+  Card: card
+  CardView: card
+  CenterAlignedTopAppBar: appbar
+  CheckBox: checkbox
+  Checkbox: checkbox
+  CheckedTextView: list_item
+  Chip: chip
+  ChipGroup: chip_group
+  Chronometer: clock
+  CircularProgressIndicator: progress
+  CollapsingToolbarLayout: appbar
+  CompoundButton: toggle
+  DatePicker: picker_date
+  DatePickerDialog: dialog
+  DateRangePicker: picker_date
+  Dialog: dialog
+  DialogFragment: dialog
+  DigitalClock: clock
+  Divider: divider
+  DropdownMenu: menu
+  EditText: input
+  ElevatedButton: button
+  ExpandableListView: expandable
+  ExposedDropdownMenuBox: menu
+  ExtendedFloatingActionButton: fab
+  FilledTonalButton: button
+  FilterChip: chip
+  FloatingActionButton: fab
+  FrameLayout: container
+  GLSurfaceView: video
+  GridLayout: grid
+  GridView: grid
+  HorizontalDivider: divider
+  HorizontalScrollView: container
+  Icon: icon_button
+  IconButton: icon_button
+  IconToggleButton: icon_button
+  Image: image
+  ImageButton: icon_button
+  ImageSwitcher: switcher
+  ImageView: image
+  InputChip: chip
+  LazyColumn: list
+  LazyRow: list
+  LazyVerticalGrid: grid
+  LinearLayout: container
+  LinearProgressIndicator: progress
+  ListItem: list_item
+  ListPopupWindow: menu
+  ListView: list
+  Magnifier: image
+  MaterialAlertDialogBuilder: dialog
+  MaterialButton: button
+  MaterialCardView: card
+  MaterialDatePicker: dialog
+  MaterialSwitch: toggle
+  MaterialToolbar: appbar
+  MediaController: video
+  Menu: menu
+  ModalBottomSheet: dialog
+  MultiAutoCompleteTextView: input
+  NavigationBar: navbar
+  NavigationDrawer: navbar
+  NavigationRail: navbar
+  NavigationView: navbar
+  NumberPicker: picker_text
+  OutlinedButton: button
+  OutlinedTextField: input
+  PopupMenu: menu
+  PopupWindow: dialog
+  ProgressBar: progress
+  PullToRefreshBox: refresh
+  QuickContactBadge: image
+  RadioButton: radio
+  RadioGroup: radio
+  RangeSlider: slider
+  RatingBar: rating
+  RecyclerView: list
+  RelativeLayout: container
+  RemoteViews: container
+  Scaffold: card
+  ScrollView: container
+  SearchBar: search
+  SearchView: search
+  SeekBar: slider
+  SegmentedButton: segmented
+  Slider: slider
+  Snackbar: toast
+  Space: container
+  Spinner: picker_text
+  StackView: pager
+  SuggestionChip: chip
+  Surface: card
+  SurfaceView: video
+  SwipeRefreshLayout: refresh
+  SwipeToDismissBox: swipe
+  Switch: toggle
+  SwitchMaterial: toggle
+  Tab: tabs
+  TabHost: tabs
+  TabLayout: tabs
+  TabRow: tabs
+  TabWidget: tabs
+  TableLayout: container
+  TableRow: container
+  Text: label
+  TextButton: button
+  TextClock: clock
+  TextField: input
+  TextInputEditText: input
+  TextInputLayout: input
+  TextSwitcher: switcher
+  TextView: label
+  TextureView: video
+  TimePicker: picker_time
+  TimePickerDialog: dialog
+  Toast: toast
+  ToggleButton: toggle
+  Toolbar: appbar
+  Tooltip: tooltip
+  TopAppBar: appbar
+  TwoLineListItem: label
+  VerticalDivider: divider
+  VideoView: video
+  ViewAnimator: container
+  ViewFlipper: pager
+  ViewPager: pager
+  ViewPager2: pager
+  ViewSwitcher: switcher
+  WebView: web
+hmos:
+  AlphabetIndexer: container
+  ArcButton: button
+  ArcScrollBar: scrollbar
+  ArcSlider: slider
+  ArcSwiper: pager
+  AtomicServiceNavigation: navbar
+  AtomicServiceSearch: search
+  AtomicServiceTabs: tabs
+  AtomicServiceWeb: web
+  Badge: badge
+  Blank: container
+  Button: button
+  CalendarPicker: picker_date
+  Checkbox: checkbox
+  CheckboxGroup: checkbox_group
+  Chip: chip
+  ChipGroup: chip_group
+  Column: container
+  ColumnSplit: container
+  ComposeListItem: list_item
+  ComposeTitleBar: appbar
+  ContainerReader: container
+  ContainerSpan: label
+  Counter: stepper
+  CounterV2: stepper
+  DatePicker: picker_date
+  Dialog: dialog
+  DialogV2: dialog
+  Divider: divider
+  DownloadFileButton: button
+  DynamicLayout: container
+  EditableTitleBar: appbar
+  EmbeddedComponent: container
+  ExceptionPrompt: dialog
+  Filter: filter
+  Flex: container
+  FlowItem: grid
+  FoldSplitContainer: container
+  FolderStack: container
+  FormLink: container
+  FullScreenLaunchComponent: container
+  Gauge: progress
+  Grid: grid
+  GridCol: grid
+  GridContainer: container
+  GridItem: grid
+  GridObjectSortComponent: grid
+  GridRow: grid
+  HalfScreenLaunchComponent: container
+  Hyperlink: container
+  Image: image
+  ImageAnimator: image
+  ImageSpan: image
+  InterstitialDialogAction: dialog
+  LazyColumnLayout: container
+  LazyVGridLayout: grid
+  LazyVWaterFlowLayout: grid
+  List: list
+  ListItem: list_item
+  ListItemGroup: list
+  LoadingProgress: progress
+  Menu: menu
+  MenuItem: menu
+  MenuItemGroup: menu
+  MultiNavigation: navbar
+  NavDestination: container
+  NavRouter: navbar
+  Navigation: appbar
+  Navigator: navbar
+  NodeContainer: container
+  Panel: dialog
+  Popup: menu
+  PopupV2: menu
+  Progress: progress
+  ProgressButton: button
+  ProgressButtonV2: button
+  Radio: radio
+  Rating: rating
+  Refresh: refresh
+  RelativeContainer: container
+  RichEditor: input
+  RichText: web
+  Row: container
+  RowSplit: container
+  Scroll: container
+  ScrollBar: scrollbar
+  Search: search
+  SegmentButton: segmented
+  SegmentButtonV2: segmented
+  Select: picker_text
+  SelectTitleBar: appbar
+  SelectionMenu: menu
+  SideBarContainer: navbar
+  Slider: slider
+  Span: label
+  SplitLayout: container
+  Stack: container
+  Stepper: stepper
+  StepperItem: stepper
+  SubHeader: appbar
+  SubHeaderV2: appbar
+  SwipeRefresher: refresh
+  Swiper: pager
+  SymbolGlyph: icon_button
+  SymbolSpan: label
+  TabContent: tabs
+  TabTitleBar: appbar
+  Tabs: tabs
+  Text: label
+  TextArea: input
+  TextClock: clock
+  TextInput: input
+  TextPicker: picker_text
+  TextTimer: clock
+  TimePicker: picker_time
+  Toggle: toggle
+  ToolBar: appbar
+  ToolBarV2: appbar
+  ToolbarItem: appbar
+  TreeView: expandable
+  Video: video
+  WaterFlow: grid
+  Web: web
+  XComponent: video
+  formmenu: menu
+no_counterpart:
+  android_only:
+  - Gallery
+  - SlidingDrawer
+  - DialerFilter
+  - ZoomButton
+  - ZoomControls
+  hmos_only:
+  - PatternLock
+  - QRCode
+  - Marquee
+  - DataPanel
+  - Component3D
+  - DepthComponent
+  - ArcAlphabetIndexer
+  - ArcList
+  - ArcListItem
+non_visual:
+- Adapter
+- AdapterView
+- Advanceable
+- ArrayAdapter
+- BaseAdapter
+- BaseExpandableListAdapter
+- Checkable
+- CursorAdapter
+- CursorTreeAdapter
+- EdgeEffect
+- ExpandableListAdapter
+- Filter
+- FilterQueryProvider
+- Filterable
+- HeaderViewListAdapter
+- HeterogeneousExpandableList
+- Label
+- ListAdapter
+- NavPushPathHelper
+- OverScroller
+- RemoteViewsService
+- ResourceCursorAdapter
+- ResourceCursorTreeAdapter
+- Scroller
+- SectionIndexer
+- ShareActionProvider
+- SimpleAdapter
+- SimpleCursorAdapter
+- SimpleCursorTreeAdapter
+- SimpleExpandableListAdapter
+- SpinnerAdapter
+- ThemedSpinnerAdapter
+- WrapperListAdapter
+- ZoomButtonsController

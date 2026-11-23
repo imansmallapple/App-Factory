@@ -1,0 +1,48 @@
+{
+  "units": {
+    "android": 4,
+    "hmos": 4
+  },
+  "counts": {
+    "D2_style_drift": 1,
+    "D1_ok": 2,
+    "pass": 1
+  },
+  "d1_skipped": 2,
+  "findings": [
+    {
+      "android": "Button",
+      "hmos": "Button",
+      "role": "button",
+      "text": "Go",
+      "dist": 0.002,
+      "verdict": "D2_style_drift",
+      "dE": 49.2
+    },
+    {
+      "android": "Switch",
+      "hmos": "Toggle",
+      "role": "toggle",
+      "text": "",
+      "dist": 0.01,
+      "verdict": "D1_ok"
+    },
+    {
+      "android": "CheckBox",
+      "hmos": "Checkbox",
+      "role": "checkbox",
+      "text": "",
+      "dist": 0.006,
+      "verdict": "D1_ok"
+    },
+    {
+      "android": "TextView",
+      "hmos": "Text",
+      "role": "label",
+      "text": "Hello",
+      "dist": 0.002,
+      "verdict": "pass",
+      "dE": 0.0
+    }
+  ]
+}
