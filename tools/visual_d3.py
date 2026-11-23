@@ -136,11 +136,43 @@ def hungarian(cost: np.ndarray) -> list[int]:
     return ans
 
 
+def text_anchors(au, hu) -> list[tuple[int, int]]:
+    """Widgets whose normalised text appears exactly once on each side are certainly the
+    same widget. Anchoring them first stops the optimiser from trading a certain match for
+    a cheap-looking positional one when the two data sets have different lengths."""
+    ca = collections.Counter(norm_text(u["text"]) for u in au if norm_text(u["text"]))
+    ch = collections.Counter(norm_text(u["text"]) for u in hu if norm_text(u["text"]))
+    by_text = {}
+    for j, u in enumerate(hu):
+        t = norm_text(u["text"])
+        if t and ch[t] == 1:
+            by_text[t] = j
+    out = []
+    for i, u in enumerate(au):
+        t = norm_text(u["text"])
+        if t and ca[t] == 1 and t in by_text:
+            out.append((i, by_text[t]))
+    return out
+
+
 def align(au, hu, a_size, h_size, dy_shift: float):
     """Optimal widget alignment; returns (pairs, unmatched_android, unmatched_hmos)."""
     n, m = len(au), len(hu)
     if n == 0 or m == 0:
         return [], list(range(n)), list(range(m))
+
+    anchors = text_anchors(au, hu)
+    if anchors:
+        ai = {i for i, _ in anchors}
+        hj = {j for _, j in anchors}
+        rest_a = [i for i in range(n) if i not in ai]
+        rest_h = [j for j in range(m) if j not in hj]
+        sub_pairs, sub_ua, sub_uh = align([au[i] for i in rest_a], [hu[j] for j in rest_h],
+                                          a_size, h_size, dy_shift)
+        pairs = [(i, j, pair_cost(au[i], hu[j], a_size, h_size, dy_shift))
+                 for i, j in anchors]
+        pairs += [(rest_a[i], rest_h[j], c) for i, j, c in sub_pairs]
+        return pairs, [rest_a[i] for i in sub_ua], [rest_h[j] for j in sub_uh]
 
     if n + m > GREEDY_LIMIT:
         # too many widgets for the O(n^3) solver in pure python: rank pairs by cost

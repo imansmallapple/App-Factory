@@ -73,6 +73,56 @@ plant_list  {page_offset 1, dataset_gap 1, missing 2, extra 3, role_changed 1,
 1:N now fires on both pages: an Android plant card carries 4 alignable children, the port's card
 carries 2 — one `block_child_mismatch` row instead of four unrelated diffs on the leaves.
 
+## Pass / fail gate
+
+`visual_audit.py` ends with a verdict, a 0..1 score and an exit code (0 pass, 1 fail), so it can
+be used as a gate and not just a report generator.
+
+| Blocking (the port is wrong in a way a user hits) | Warning (explainable, human glance) | Info |
+|---|---|---|
+| `missing` of an interactive or chrome role (button, input, toggle, tabs, appbar, menu, dialog…) | `missing` of a content role (label/image/list_item) — a data-set question | `typography_check` |
+| `state_mismatch` (checked/enabled differ) | `extra`, `moved`, `resized`, `page_offset` | `unjudged` |
+| `system_control_restyled` (one platform widget breaks its siblings) | `dataset_gap`, `reordered` below 20% | `moved_by_data` |
+| `block_child_mismatch` (1:N came out with a different child count) | `style_drift` below visibility (ΔE ≤ 20, radius ≤ 0.25) | |
+| `style_drift` / `class_style_drift` beyond visibility (ΔE > 20) | `role_changed` when only one side is interactive | |
+| `role_changed` between two interactive roles | | |
+
+Two rules that stop the gate from crying wolf:
+
+* a `missing` box that **contains** an already-paired one is the same affordance exported twice
+  (the Android FAB exports both a Button and its label) → warning, not blocking
+* text anchors (normalised text unique on both sides) are paired before the optimiser runs, so a
+  shorter data set cannot steal a certain match
+
+Score: `0` when nothing blocks, else `min(1, 0.5 + 0.1 × (blocking − 1))`.
+
+## ECAT integration
+
+`eval/ecat/src/ecat/entropy/plugins/a2h_verify/deterministic_gate.py` runs the audit on the
+screenshots and dumps `check_ui_align` already captured (no second navigation), aggregates the
+verdict, and never raises: a broken gate reports `unavailable` so the migration loop keeps going.
+
+`UiAlignPlugin._evaluate` gains:
+
+* `details["deterministic_gate"]` — per-page verdict, score, blocking rows
+* `config["ui_align_deterministic"]` (default on) — run the gate at all
+* `config["ui_align_deterministic_score"]` (default off) — feed the gate score into the gradient
+  instead of the old constant `hard_score = 0.0`
+* `extract_work_items` — every blocking row becomes a `WorkItem` (`severity="high"`), so the next
+  iteration is told exactly which page and which widget failed
+
+Smoke test on the real captures (`tmp_a2h/test_bridge.py`):
+
+```
+gate: fail score: 0.6 judged: 2/2 failing: ['garden', 'plant_list']
+  garden      ok fail score=0.5 blocking=1
+  plant_list  ok fail score=0.6 blocking=2
+work items:
+  - ui_gate[garden]: block_child_mismatch — block_child_mismatch
+  - ui_gate[plant_list]: class_style_drift label — style change beyond visibility
+  - ui_gate[plant_list]: block_child_mismatch — block_child_mismatch
+```
+
 ## Honest gaps
 
 1. `reordered` has never fired on real data — only on synthetic inversions.

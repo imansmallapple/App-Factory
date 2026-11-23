@@ -140,6 +140,77 @@ def blocks(tree: list[dict]) -> list[dict]:
     return out
 
 
+# ── pass / fail gate ───────────────────────────────────────────────────────
+# A row is blocking when the port is wrong in a way a user would hit; it is a warning when
+# the difference is explainable and a human should glance at it. Nothing here is a taste
+# threshold: the only numbers are "how big must a style change be to be visible" (20 dE,
+# ~8x the JND, or a quarter of the corner's short side) and "how much reordering counts".
+STYLE_BLOCK = {"fill": 20.0, "text": 20.0, "radius": 0.25, "height": 0.02}
+REORDER_BLOCK_SHARE = 0.2
+
+# controls a user operates or chrome that frames the page: if one of these is gone the port
+# is functionally short. Content roles (label/image/list_item) missing is a data question.
+INTERACTIVE_ROLES = {"button", "input", "toggle", "checkbox", "radio", "slider", "tabs",
+                     "navbar", "appbar", "menu", "dialog", "fab", "icon_button",
+                     "segmented", "chip", "search", "stepper", "picker_date", "picker_time"}
+
+BLOCKING = {"state_mismatch", "system_control_restyled", "block_child_mismatch"}
+WARNING = {"extra", "resized", "moved", "dataset_gap", "page_offset", "reordered"}
+INFORMATIONAL = {"typography_check", "unjudged", "moved_by_data"}
+
+
+def gate(rows: list[dict]) -> dict:
+    blocking, warnings, info = [], [], []
+    for r in rows:
+        v = r.get("verdict")
+        if v in ("style_drift", "class_style_drift"):
+            big = {ch: d for ch, d in (r.get("deltas") or {}).items()
+                   if d > STYLE_BLOCK.get(ch, 1e9)}
+            if v == "class_style_drift":
+                ch = r.get("channel")
+                md = r.get("median_delta") or 0.0
+                big = {ch: md} if md > STYLE_BLOCK.get(ch, 1e9) else {}
+            if r.get("role") == "unknown":
+                big = {}
+            (blocking if big else warnings).append({**r, "gate_reason":
+                                                    ("style change beyond visibility" if big else "small style drift")})
+            continue
+        if v == "reordered":
+            share = (r.get("inversions", 0) / r.get("of", 1)) if r.get("of") else 0
+            (blocking if share >= REORDER_BLOCK_SHARE else warnings).append(
+                {**r, "gate_reason": f"{share:.0%} of the order changed"})
+            continue
+        if v == "missing":
+            if r.get("dupe_of_paired"):
+                warnings.append({**r, "gate_reason": "same affordance already paired "
+                                                    "(container exported twice)"})
+            elif r.get("interactive"):
+                blocking.append({**r, "gate_reason": "interactive control missing"})
+            else:
+                warnings.append({**r, "gate_reason": "content missing (data set)"})
+            continue
+        if v == "role_changed":
+            both_interactive = r.get("role") in INTERACTIVE_ROLES and \
+                r.get("hmos_role") in INTERACTIVE_ROLES
+            (blocking if both_interactive else warnings).append(
+                {**r, "gate_reason": "same content, different interactive widget"
+                                     if both_interactive else "same content, different widget kind"})
+            continue
+        if v in BLOCKING:
+            blocking.append({**r, "gate_reason": v})
+        elif v in WARNING:
+            warnings.append({**r, "gate_reason": v})
+        elif v in INFORMATIONAL:
+            info.append(r)
+
+    n = len(blocking)
+    score = 0.0 if n == 0 else min(1.0, 0.5 + 0.1 * (n - 1))
+    return {"verdict": "fail" if n else "pass",
+            "blocking": blocking, "warnings": warnings, "informational": info,
+            "counts": {"blocking": n, "warnings": len(warnings), "informational": len(info)},
+            "score": round(score, 3)}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--android-xml", required=True)
@@ -300,11 +371,12 @@ def main() -> None:
         x, y = r.pop("_pair", (None, None))
         if x is None:
             continue
-        bad = [f"{ch}={round(d2.delta(ch, sig_a[x['id']].get(ch), sig_h[y['id']].get(ch)) or 0, 2)}"
-               for ch in d2.channels_for(x["role"])
-               if (x["id"], y["id"], ch) in flagged]
-        r["d2"] = ("drift(" + ", ".join(bad) + ")") if bad else "ok"
-        if bad and r["verdict"] == "pass":
+        deltas = {ch: round(d2.delta(ch, sig_a[x["id"]].get(ch), sig_h[y["id"]].get(ch)) or 0, 2)
+                  for ch in d2.channels_for(x["role"]) if (x["id"], y["id"], ch) in flagged}
+        r["d2"] = ("drift(" + ", ".join(f"{k}={v}" for k, v in deltas.items()) + ")") if deltas else "ok"
+        if deltas:
+            r["deltas"] = deltas
+        if deltas and r["verdict"] == "pass":
             r["verdict"] = "style_drift"
 
     # D1 consistency: the platform draws its own controls identically, so an odd one out
@@ -354,9 +426,28 @@ def main() -> None:
             rows.append({"verdict": "unjudged", "role": "unknown", "count": len(items),
                          "sample": [u["text"][:20] for u in items[:4]]})
             continue
+        paired_texts = {d3.norm_text(x["text"]) for x, _, _ in pairs if d3.norm_text(x["text"])}
+        paired_rects = [x["rect"] for x, _, _ in pairs]
+
+        def wraps_paired(rect) -> bool:
+            """The Android FAB exports a Button and its label as two nodes. If the unpaired box
+            fully contains an already paired one, the affordance exists — do not count it twice.
+            Direction matters: a bare label that merely overlaps a neighbour is NOT a wrapper."""
+            x, y, w, h = rect
+            for px, py, pw, ph in paired_rects:
+                ix = max(0, min(x + w, px + pw) - max(x, px))
+                iy = max(0, min(y + h, py + ph) - max(y, py))
+                if pw * ph and (ix * iy) / float(pw * ph) >= 0.9:
+                    return True
+            return False
+
         for u in items:
             rows.append({"verdict": "missing", "role": role, "android": u["cls"],
-                         "text": u["text"][:28]})
+                         "text": u["text"][:28],
+                         "interactive": role in INTERACTIVE_ROLES,
+                         "dupe_of_paired": bool(
+                             (d3.norm_text(u["text"]) and d3.norm_text(u["text"]) in paired_texts)
+                             or wraps_paired(u["rect"]))})
     for y in uh:
         rows.append({"verdict": "extra", "role": y["role"], "hmos": y["cls"],
                      "text": y["text"][:28]})
@@ -439,14 +530,29 @@ def main() -> None:
     print(f"\nsummary: {dict(counts)}")
     print(f"tolerances: move={a.move_tol:.3f} size={a.size_tol:.3f} "
           f"eps={ {c: round(eps[c], 3) for c in d2.CHANNELS} }")
+
+    g = gate(rows)
+    print(f"\nGATE: {g['verdict'].upper()}  score={g['score']}  "
+          f"blocking={g['counts']['blocking']} warnings={g['counts']['warnings']} "
+          f"info={g['counts']['informational']}")
+    for r in g["blocking"]:
+        what = r.get("text") or r.get("sample") or ""
+        print(f"  BLOCK  {r['verdict']:22s} {str(r.get('role','')):8s} {str(what)[:30]:30s} "
+              f"{r.get('gate_reason','')}")
+    for r in g["warnings"]:
+        what = r.get("text") or r.get("sample") or ""
+        print(f"  warn   {r['verdict']:22s} {str(r.get('role','')):8s} {str(what)[:30]:30s} "
+              f"{r.get('gate_reason','')}")
     if a.json:
         Path(a.json).write_text(json.dumps(
             {"leaves": {"android": len(au), "hmos": len(hu)},
              "blocks": {"android": len(ab), "hmos": len(hb)}, "pairs": len(pairs),
              "dy_shift": dy, "eps": eps, "eps_source": src,
-             "counts": dict(counts), "rows": rows}, ensure_ascii=False, indent=2),
-            encoding="utf-8")
+             "counts": dict(counts), "gate": g, "rows": rows},
+            ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"wrote {a.json}")
+
+    raise SystemExit(0 if g["verdict"] == "pass" else 1)
 
 
 if __name__ == "__main__":
