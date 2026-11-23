@@ -25,7 +25,7 @@ except ImportError:  # pragma: no cover
     print("needs pyyaml: uv run --with pyyaml python tools/build_role_map.py")
     raise SystemExit(2)
 
-# ── harmonios inventory: 96 components (ArkUI ArkTS declarative) ─────────────
+# ── HarmonyOS inventory: ArkUI ArkTS declarative components ──────────────────
 ARKUI_BASIC = [
     "ArcScrollBar", "Blank", "Button", "CalendarPicker", "Checkbox", "CheckboxGroup",
     "Component3D", "ContainerSpan", "DataPanel", "DatePicker", "DepthComponent", "Divider",
@@ -131,7 +131,7 @@ ROLES: dict[str, dict] = {
                      "android": ["CheckBox", "Checkbox"],
                      "hmos": ["Checkbox"]},
     "checkbox_group": {"check_style": False, "state": "checked", "android_via": "handrolled",
-                     # 安卓没有组控件：每个 CheckBox 自己管，组语义在代码里
+                     # Android has no group widget: each CheckBox manages itself, grouping lives in app code
                      "android": [],
                      "hmos": ["CheckboxGroup"]},
     "radio":        {"check_style": False, "state": "checked",
@@ -165,7 +165,7 @@ ROLES: dict[str, dict] = {
                      "android": ["Spinner", "NumberPicker", "AbsSpinner"],
                      "hmos": ["TextPicker", "Select"]},
     "stepper":      {"check_style": False, "state": "text", "android_via": "handrolled",
-                     # 安卓没有步进器控件：ZoomButton 是废弃的缩放入口，不算等价
+                     # Android has no stepper widget: ZoomButton is a deprecated zoom control, not equivalent
                      "android": [],
                      "hmos": ["Stepper", "StepperItem", "Counter", "CounterV2"]},
     "tabs":         {"check_style": False, "state": "selected",
@@ -189,7 +189,7 @@ ROLES: dict[str, dict] = {
                      "hmos": ["Menu", "MenuItem", "MenuItemGroup", "SelectionMenu",
                               "formmenu", "Popup", "PopupV2"]},
     "filter":       {"check_style": False, "state": "", "android_via": "handrolled",
-                     # 安卓没有筛选器组件：底部弹层 + 复选框自己拼
+                     # Android has no filter component: bottom sheet + checkboxes, hand-built
                      "android": [],
                      "hmos": ["Filter"]},
     "dialog":       {"check_style": False, "state": "",
@@ -201,7 +201,7 @@ ROLES: dict[str, dict] = {
                      "hmos": ["Panel", "Dialog", "DialogV2", "ExceptionPrompt",
                               "InterstitialDialogAction"]},
     "toast":        {"check_style": False, "state": "", "hmos_via": "api",
-                     # promptAction.showToast()（API，不是组件，dump 里看不到节点）
+                     # promptAction.showToast() — an API, not a component; never a node in a dump
                      "android": ["Toast", "Snackbar"],
                      "hmos": []},
     "refresh":      {"check_style": False, "state": "",
@@ -214,11 +214,11 @@ ROLES: dict[str, dict] = {
                      "android": ["Divider", "HorizontalDivider", "VerticalDivider"],
                      "hmos": ["Divider"]},
     "scrollbar":    {"check_style": False, "state": "", "android_via": "attribute",
-                     # Android 的滚动条是 View 的 scrollbars 属性，没有对应控件类
+                     # Android scrollbars are a View attribute (android:scrollbars), no widget class exists
                      "android": [],
                      "hmos": ["ScrollBar", "ArcScrollBar"]},
     "swipe":        {"check_style": False, "state": "", "hmos_via": "attribute",
-                     # ListItem().swipeAction({start/end})，不是独立组件
+                     # ListItem().swipeAction({start/end}) — an attribute, not a standalone component
                      "android": ["SwipeToDismissBox"],
                      "hmos": []},
 
@@ -229,7 +229,7 @@ ROLES: dict[str, dict] = {
                      "hmos": ["Button", "ArcButton", "ProgressButton", "ProgressButtonV2",
                               "DownloadFileButton"]},
     "fab":          {"check_style": True, "state": "", "hmos_via": "handrolled",
-                     # 无 FAB 组件：Button({type: ButtonType.Circle}) + position
+                     # no FAB component: Button({type: ButtonType.Circle}) + position
 
                      "android": ["FloatingActionButton", "ExtendedFloatingActionButton"],
                      "hmos": []},
@@ -262,7 +262,7 @@ ROLES: dict[str, dict] = {
                      "android": ["WebView"],
                      "hmos": ["Web", "RichText", "AtomicServiceWeb"]},
     "card":         {"check_style": True, "state": "", "hmos_via": "handrolled",
-                     # 无 Card 组件：Column/Row + borderRadius + shadow 自己拼
+                     # no Card component: Column/Row + borderRadius + shadow, hand-built
 
                      "android": ["CardView", "MaterialCardView", "Card", "Surface", "Scaffold"],
                      "hmos": []},
@@ -279,19 +279,19 @@ ROLES: dict[str, dict] = {
                                  "AdapterViewFlipper", "ViewFlipper", "StackView"],
                      "hmos": ["Swiper", "ArcSwiper"]},
     "expandable":   {"check_style": True, "state": "",
-                     # 对应 @ohos.arkui.advanced.TreeView
+                     # maps to @ohos.arkui.advanced.TreeView
 
                      "android": ["ExpandableListView"],
                      "hmos": ["TreeView"]},
     "tooltip":      {"check_style": True, "state": "", "hmos_via": "attribute",
-                     # .bindTips() 通用属性，不是组件
+                     # .bindTips() — a universal attribute, not a component
                      "android": ["Tooltip"],
                      "hmos": []},
     "clock":        {"check_style": True, "state": "text",
                      "android": ["AnalogClock", "TextClock", "DigitalClock", "Chronometer"],
                      "hmos": ["TextClock", "TextTimer"]},
     "switcher":     {"check_style": True, "state": "", "hmos_via": "handrolled",
-                     # 无 ViewSwitcher：Stack + animateTo/transition
+                     # no ViewSwitcher: Stack + animateTo/transition
 
                      "android": ["TextSwitcher", "ViewSwitcher", "ImageSwitcher"],
                      "hmos": []},
@@ -333,23 +333,24 @@ NON_VISUAL_ANDROID = {"Adapter", "AdapterView", "BaseAdapter", "CursorAdapter", 
               "AdapterView", "ListAdapter", "SpinnerAdapter", "ThemedSpinnerAdapter",
               "ResourceCursorAdapter", "Advanceable", "SectionIndexer",
               "HeterogeneousExpandableList", "Filterable", "Checkable", "ZoomButtonsController",
-              "ShareActionProvider", "Label"}   # compose Label：material3 内部实现，不是公开组件
+              "ShareActionProvider", "Label"}   # compose Label: internal material3 impl, not public
 NON_VISUAL_HMOS: set[str] = {"NavPushPathHelper"}
 NON_VISUAL = NON_VISUAL_ANDROID | NON_VISUAL_HMOS
 
 ROLE_TITLES = {
-    "toggle": "开关", "checkbox": "复选框", "checkbox_group": "复选框组", "radio": "单选",
-    "slider": "滑块", "progress": "进度", "rating": "评分", "input": "文本输入",
-    "search": "搜索框", "picker_date": "日期选择", "picker_time": "时间选择",
-    "picker_text": "滚轮文本选择", "stepper": "步进器", "tabs": "标签页", "appbar": "顶部栏",
-    "navbar": "导航", "menu": "菜单", "dialog": "弹层", "toast": "轻提示",
-    "refresh": "下拉刷新", "badge": "角标", "divider": "分割线", "scrollbar": "滚动条",
-    "swipe": "滑动容器", "button": "按钮", "fab": "悬浮按钮", "icon_button": "图标按钮",
-    "chip": "标签块", "label": "文本", "image": "图片", "video": "视频", "web": "网页",
-    "card": "卡片", "list": "列表", "grid": "网格", "pager": "翻页", "expandable": "可展开列表",
-    "tooltip": "提示气泡", "clock": "时钟", "filter": "筛选器", "segmented": "分段控件",
-    "chip_group": "标签组", "list_item": "列表项", "switcher": "内容切换",
-    "container": "容器(不参与比对)",
+    "toggle": "Switch / Toggle", "checkbox": "Checkbox", "checkbox_group": "Checkbox group",
+    "radio": "Radio", "slider": "Slider", "progress": "Progress", "rating": "Rating",
+    "input": "Text input", "search": "Search field", "picker_date": "Date picker",
+    "picker_time": "Time picker", "picker_text": "Wheel picker", "stepper": "Stepper",
+    "tabs": "Tabs", "appbar": "Top app bar", "navbar": "Navigation", "menu": "Menu",
+    "dialog": "Dialog / bottom sheet", "toast": "Toast", "refresh": "Pull to refresh",
+    "badge": "Badge", "divider": "Divider", "scrollbar": "Scrollbar", "swipe": "Swipe action",
+    "button": "Button", "fab": "Floating action button", "icon_button": "Icon button",
+    "chip": "Chip", "label": "Text", "image": "Image", "video": "Video", "web": "Web view",
+    "card": "Card", "list": "List", "grid": "Grid", "pager": "Pager",
+    "expandable": "Expandable list", "tooltip": "Tooltip", "clock": "Clock", "filter": "Filter",
+    "segmented": "Segmented control", "chip_group": "Chip group", "list_item": "List item",
+    "switcher": "Content switcher", "container": "Container (not compared)",
 }
 
 
@@ -463,20 +464,21 @@ def main() -> int:
         yaml.safe_dump(out, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
     # markdown table
-    lines = ["# Android ↔ ArkUI 组件角色映射", "",
-             f"来源：鸿蒙 {len(hmos)} 个 ArkUI 组件（OpenHarmony master 文档），"
-             f"安卓 {len(android)} 个类（android-36 widget + Material + Compose M3）。", "",
-             "`外观比不比 = 否` 即 D1：平台拥有外观，只查存在/位置/状态。", "",
-             "| 角色 | Android | ArkUI | 外观比不比 | 状态字段 |",
+    lines = ["# Android <-> ArkUI component role map", "",
+             f"Sources: {len(hmos)} ArkUI components (OpenHarmony master docs), "
+             f"{len(android)} Android classes (android-36 widget + Material + Compose M3).", "",
+             "`compare appearance = no` is D1: the platform owns the look, so only "
+             "existence / position / state are checked.", "",
+             "| Role | Android | ArkUI | Compare appearance | State field |",
              "|---|---|---|---|---|"]
     for role, spec in ROLES.items():
         a = ", ".join(f"`{x}`" for x in spec["android"]) or "—"
         h = ", ".join(f"`{x}`" for x in spec["hmos"]) or "—"
         lines.append(f"| {ROLE_TITLES.get(role, role)} `{role}` | {a} | {h} | "
-                     f"{'**比**' if spec['check_style'] else '否'} | {spec['state'] or '—'} |")
-    lines += ["", "## 无对应项", "",
-              f"- 仅 Android：{', '.join(f'`{x}`' for x in NO_COUNTERPART['android_only'])}",
-              f"- 仅 ArkUI：{', '.join(f'`{x}`' for x in NO_COUNTERPART['hmos_only'])}"]
+                     f"{'**yes**' if spec['check_style'] else 'no'} | {spec['state'] or '—'} |")
+    lines += ["", "## No counterpart", "",
+              f"- Android only: {', '.join(f'`{x}`' for x in NO_COUNTERPART['android_only'])}",
+              f"- ArkUI only: {', '.join(f'`{x}`' for x in NO_COUNTERPART['hmos_only'])}"]
     (root / "docs" / "role-map.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("wrote tools/role_map.yaml, docs/role-map.md")
     return 0 if not (unmapped_h or unmapped_a) else 1

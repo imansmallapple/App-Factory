@@ -312,7 +312,7 @@ def main() -> None:
     dy_all = [centre(hu, h_size)[1] - centre(au, a_size)[1] for au, hu, _ in pairs]
     dy0 = statistics.median(dy_all) if dy_all else 0.0
     if abs(dy0) > a.move_tol:
-        findings.append({"role": "-", "text": f"整页垂直偏移 {dy0:+.1%}",
+        findings.append({"role": "-", "text": f"page shifted vertically {dy0:+.1%}",
                          "verdict": "D3_page_offset", "dy": round(dy0, 4)})
 
     for au, hu, dist in pairs:
@@ -372,7 +372,7 @@ def main() -> None:
     for r in findings:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
     print(f"\nsummary: {counts}")
-    print(f"D1: {d1_skipped} 个系统控件跳过外观比对（不产生缺陷）")
+    print(f"D1: {d1_skipped} platform-owned control(s) skipped — appearance not compared")
 
     if a.json:
         Path(a.json).write_text(json.dumps(
