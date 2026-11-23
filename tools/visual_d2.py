@@ -64,6 +64,13 @@ DEFAULT_MASK = CHANNELS
 def channels_for(role: str) -> tuple[str, ...]:
     return CHANNEL_MASK.get(role, DEFAULT_MASK)
 
+
+# Siblings that are legitimately styled differently because of where they sit: a tab
+# label and a card label are both role=label but one is the app's accent colour and the
+# other is body text. Comparing them within a page invents faults; only the
+# cross-platform judgement (against the Android original) makes sense for these roles.
+NON_GROUPABLE = {"label", "clock", "container"}
+
 # only used when no second capture is supplied; recorded as source="unmeasured"
 DEFAULT_EPS = {"fill": 2.5, "text": 2.5, "radius": 0.02, "height": 0.004}
 FLOOR_EPS = {"fill": 0.5, "text": 0.5, "radius": 0.004, "height": 0.001}
@@ -99,8 +106,12 @@ def text_colour(c: np.ndarray) -> np.ndarray | None:
     return dark.mean(axis=0) if dark.size else None
 
 
-def corner_radius(c: np.ndarray, fill: np.ndarray, tol: float = 14.0) -> float:
-    """How far down the top row the fill only reaches: 0 = square, r/min_side = rounded."""
+def corner_radius(c: np.ndarray, fill: np.ndarray, tol: float = 14.0) -> float | None:
+    """How far down the top row the fill only reaches: 0 = square, r/min_side = rounded.
+
+    Returns None when the corner never resolves (gradient, clipped edge, photo): a
+    sentinel value here would poison the median and invent outliers.
+    """
     H, W = c.shape[:2]
     lim = min(H, W) // 2
     for row in range(max(1, lim)):
@@ -109,13 +120,27 @@ def corner_radius(c: np.ndarray, fill: np.ndarray, tol: float = 14.0) -> float:
         idx = np.where(d < tol)[0]
         if idx.size and idx[0] <= 1:
             return row / float(min(H, W))
-    return 0.5
+    return None
+
+
+def clipped(rect, img: np.ndarray) -> bool:
+    """A card half-scrolled off the viewport has a truncated box: its height and
+    corner say nothing about its style."""
+    x, y, w, h = rect
+    H, W = img.shape[:2]
+    return y <= 1 or x <= 1 or y + h >= H - 1 or x + w >= W - 1
 
 
 def signature_full(img: np.ndarray, u: dict) -> dict:
     c = crop(img, u["rect"], inset=0.10)          # inset: colour, free of border AA
     c_edge = crop(img, u["rect"], inset=0.0)      # edge: the corner arc lives here
-    out: dict[str, object] = {"height": u["rect"][3] / img.shape[0]}
+    out: dict[str, object] = {}
+    if clipped(u["rect"], img):
+        out["clipped"] = True
+        if c is not None:
+            out["fill"] = d1.lab(tuple(float(x) for x in dominant(c)))
+        return out
+    out["height"] = u["rect"][3] / img.shape[0]
     if c is None or c_edge is None:
         return out
     fill = dominant(c)
@@ -182,10 +207,14 @@ def robust(series: list[float]) -> tuple[float, float]:
 def level1(side: str, units: list[dict], sigs: dict[int, dict], eps) -> list[dict]:
     """Within one page: who does not look like its siblings."""
     out = []
-    groups: dict[str, list[tuple[dict, dict]]] = {}
+    groups: dict[tuple[str, int], list[tuple[dict, dict]]] = {}
     for i, u in enumerate(units):
-        groups.setdefault(u["role"], []).append((u, sigs[i]))
-    for role, members in groups.items():
+        if u["role"] in NON_GROUPABLE or u["role"] == "unknown":
+            continue                      # see NON_GROUPABLE: no meaningful sibling group
+        h = sigs[i].get("height")
+        bucket = int(float(h) * 20) if h is not None else -1   # 5% of screen height
+        groups.setdefault((u["role"], bucket), []).append((u, sigs[i]))
+    for (role, _bucket), members in groups.items():
         if len(members) < MIN_GROUP:
             continue
         for ch in channels_for(role):
@@ -312,6 +341,10 @@ def main() -> None:
     findings += level1("hmos", hu, sig_h, eps)
 
     pairs, _, _ = d1.match(au, hu, a_size, h_size, a.pos_tol)
+    by_role: dict[str, int] = {}
+    for au_, _, _ in pairs:
+        by_role[au_["role"]] = by_role.get(au_["role"], 0) + 1
+    print(f"matched pairs for cross-platform: {len(pairs)}  {dict(sorted(by_role.items()))}")
     a_idx = {id(u): i for i, u in enumerate(au)}
     h_idx = {id(u): i for i, u in enumerate(hu)}
     findings += level3(pairs,
@@ -321,7 +354,7 @@ def main() -> None:
 
     print(f"\n{'level':15s} {'role':10s} {'channel':7s} {'what':34s} detail")
     for f in findings:
-        what = f.get("text", f"n={f.get('n')} over_eps={f.get('n_over_eps')}")
+        what = f.get("text") or f"n={f.get('n')} over_eps={f.get('n_over_eps')}"
         detail = (f"value={f.get('value')} median={f.get('median')} z={f.get('z')}"
                   if f["level"] == "intra_page" else
                   f"median_delta={f.get('median_delta')} agree={f.get('agreement')}")

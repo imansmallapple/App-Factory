@@ -307,6 +307,7 @@ def main() -> None:
 
     findings = []
     d1_skipped = 0
+    d2_deferred = 0
 
     # a page-wide vertical shift is ONE finding, not N: subtract the median first
     dy_all = [centre(hu, h_size)[1] - centre(au, a_size)[1] for au, hu, _ in pairs]
@@ -325,10 +326,10 @@ def main() -> None:
             row.update(verdict="D3_state_mismatch",
                        a_checked=au["checked"], h_checked=hu["checked"])
         elif au["check_style"]:
-            la = mean_lab(apng, au["rect"])
-            lh = mean_lab(hpng, _scale_rect(hu["rect"], h_size, a_size))
-            de = _de(la, lh)
-            row.update(verdict="D2_style_drift" if de > a.de_tol else "pass", dE=round(de, 1))
+            # appearance of app-authored controls belongs to visual_d2.py (measured noise
+            # floor, intra-page outliers, class-level collapse); not judged twice here
+            d2_deferred += 1
+            row.update(verdict="d2_deferred")
         else:
             d1_skipped += 1
             row.update(verdict="D1_ok")
@@ -356,7 +357,7 @@ def main() -> None:
 
     order = {"D3_page_offset": 0, "D3_missing": 1, "D3_extra": 2, "D3_moved": 3,
              "D3_state_mismatch": 4, "manual_check": 8,
-             "D2_style_drift": 5, "D1_ok": 6, "pass": 7}
+             "d2_deferred": 5, "D1_ok": 6, "pass": 7}
     findings.sort(key=lambda r: order.get(r["verdict"], 9))
 
     print(f"\n{'verdict':18s} {'role':10s} {'android':16s} {'hmos':12s} detail")
@@ -373,6 +374,7 @@ def main() -> None:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
     print(f"\nsummary: {counts}")
     print(f"D1: {d1_skipped} platform-owned control(s) skipped — appearance not compared")
+    print(f"D2: {d2_deferred} app-authored control(s) not judged here — see tools/visual_d2.py")
 
     if a.json:
         Path(a.json).write_text(json.dumps(
